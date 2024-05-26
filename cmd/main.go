@@ -52,6 +52,8 @@ func Crawl(url string, depth int, fetcher Fetcher) {
 
 	}
 
+	close(c)
+
 	return
 }
 
