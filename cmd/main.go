@@ -18,12 +18,13 @@ func Crawl(url string, depth int, fetcher Fetcher, c chan string, wg *sync.WaitG
 	// TODO: Fetch URLs in parallel. results need to hit channel
 	// TODO: Don't fetch the same URL twice. -> with context
 	// This implementation doesn't do either:
+	//	now := time.Now()
+
 	if depth <= 0 {
 		return
 	}
 	body, urls, err := fetcher.Fetch(url)
 	if err != nil {
-		defer wg.Done()
 		fmt.Println(err)
 		return
 	}
@@ -37,8 +38,7 @@ func Crawl(url string, depth int, fetcher Fetcher, c chan string, wg *sync.WaitG
 		defer wg.Done()
 	}
 
-	defer close(c)
-
+	//	fmt.Println(time.Since(now))
 	return
 }
 
@@ -59,11 +59,11 @@ func main() {
 	now := time.Now()
 
 	ch := make(chan string, 1)
-	wg := &sync.WaitGroup{}
+	wg := sync.WaitGroup{}
 
-	Crawl("https://golang.org/", 4, fetcher, ch, wg)
-
+	Crawl("https://golang.org/", 4, fetcher, ch, &wg)
 	wg.Wait()
+	defer close(ch)
 
 	for i := range ch {
 
