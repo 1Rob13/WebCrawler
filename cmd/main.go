@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sync"
 	"time"
 )
 
@@ -13,7 +14,7 @@ type Fetcher interface {
 
 // Crawl uses fetcher to recursively crawl
 // pages starting with url, to a maximum of depth.
-func Crawl(url string, depth int, fetcher Fetcher) {
+func Crawl(url string, depth int, fetcher Fetcher, c chan string, wg *sync.WaitGroup) {
 	// TODO: Fetch URLs in parallel. results need to hit channel
 	// TODO: Don't fetch the same URL twice. -> with context
 	// This implementation doesn't do either:
@@ -22,21 +23,53 @@ func Crawl(url string, depth int, fetcher Fetcher) {
 	}
 	body, urls, err := fetcher.Fetch(url)
 	if err != nil {
+		defer wg.Done()
 		fmt.Println(err)
 		return
 	}
-	fmt.Printf("found: %s %q\n", body, urls)
+
+	//fmt.Printf("found: %s %q\n", body, urls)
+	c <- fmt.Sprintf("found: %s %q\n", body, urls)
+
 	for _, u := range urls {
-		go Crawl(u, depth-1, fetcher)
+		wg.Add(1)
+		go Crawl(u, depth-1, fetcher, c, wg)
+		defer wg.Done()
 	}
+
+	defer close(c)
+
 	return
+}
+
+func monitorWorker(cs chan string, wg *sync.WaitGroup) {
+	wg.Wait()
+	close(cs)
+}
+
+func printWorker(cs <-chan string, done chan<- bool) {
+	for a := 1; a <= len(cs); a++ {
+		fmt.Println(<-cs)
+	}
+	done <- true
 }
 
 func main() {
 
 	now := time.Now()
 
-	Crawl("https://golang.org/", 4, fetcher)
+	ch := make(chan string, 1)
+	wg := &sync.WaitGroup{}
+
+	Crawl("https://golang.org/", 4, fetcher, ch, wg)
+
+	wg.Wait()
+
+	for i := range ch {
+
+		fmt.Println(i)
+
+	}
 
 	fmt.Println(time.Since(now))
 }
