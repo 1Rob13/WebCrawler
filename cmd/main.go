@@ -19,10 +19,13 @@ func Crawl(url string, depth int, fetcher Fetcher, c chan string, wg *sync.WaitG
 	// TODO: Don't fetch the same URL twice. -> with context
 	// This implementation doesn't do either:
 	//	now := time.Now()
-
 	if depth <= 0 {
 		return
 	}
+
+	wg.Add(1)
+	defer wg.Done()
+
 	body, urls, err := fetcher.Fetch(url)
 	if err != nil {
 		fmt.Println(err)
@@ -33,25 +36,11 @@ func Crawl(url string, depth int, fetcher Fetcher, c chan string, wg *sync.WaitG
 	c <- fmt.Sprintf("found: %s %q\n", body, urls)
 
 	for _, u := range urls {
-		wg.Add(1)
 		go Crawl(u, depth-1, fetcher, c, wg)
-		defer wg.Done()
 	}
 
 	//	fmt.Println(time.Since(now))
 	return
-}
-
-func monitorWorker(cs chan string, wg *sync.WaitGroup) {
-	wg.Wait()
-	close(cs)
-}
-
-func printWorker(cs <-chan string, done chan<- bool) {
-	for a := 1; a <= len(cs); a++ {
-		fmt.Println(<-cs)
-	}
-	done <- true
 }
 
 func main() {
@@ -63,10 +52,10 @@ func main() {
 
 	Crawl("https://golang.org/", 4, fetcher, ch, &wg)
 	wg.Wait()
-	defer close(ch)
+
+	//close(ch)
 
 	for i := range ch {
-
 		fmt.Println(i)
 
 	}
