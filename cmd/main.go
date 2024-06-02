@@ -47,7 +47,7 @@ func main() {
 
 	now := time.Now()
 
-	ch := make(chan string, 1)
+	ch := make(chan string, 10)
 	wg := sync.WaitGroup{}
 
 	Crawl("https://golang.org/", 4, fetcher, ch, &wg)
