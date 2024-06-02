@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"sync"
 	"time"
 )
 
@@ -14,7 +13,7 @@ type Fetcher interface {
 
 // Crawl uses fetcher to recursively crawl
 // pages starting with url, to a maximum of depth.
-func Crawl(url string, depth int, fetcher Fetcher, c chan string, wg *sync.WaitGroup) {
+func Crawl(url string, depth int, fetcher Fetcher, c chan string) {
 	// TODO: Fetch URLs in parallel. results need to hit channel
 	// TODO: Don't fetch the same URL twice. -> with context
 	// This implementation doesn't do either:
@@ -23,12 +22,13 @@ func Crawl(url string, depth int, fetcher Fetcher, c chan string, wg *sync.WaitG
 		return
 	}
 
-	wg.Add(1)
-	defer wg.Done()
+	//i think he panics because he does not control the recoursive calls and they send after the chan recieve is down
+
+	//collect channels up?
 
 	body, urls, err := fetcher.Fetch(url)
 	if err != nil {
-		fmt.Println(err)
+		c <- fmt.Sprintf(err.Error())
 		return
 	}
 
@@ -36,7 +36,8 @@ func Crawl(url string, depth int, fetcher Fetcher, c chan string, wg *sync.WaitG
 	c <- fmt.Sprintf("found: %s %q\n", body, urls)
 
 	for _, u := range urls {
-		go Crawl(u, depth-1, fetcher, c, wg)
+		go Crawl(u, depth-1, fetcher, c)
+
 	}
 
 	//	fmt.Println(time.Since(now))
@@ -47,20 +48,26 @@ func main() {
 
 	now := time.Now()
 
-	ch := make(chan string, 10)
-	wg := sync.WaitGroup{}
+	ch := make(chan string, 15)
 
-	Crawl("https://golang.org/", 4, fetcher, ch, &wg)
-	wg.Wait()
+	Crawl("https://golang.org/", 4, fetcher, ch)
+	//wg.Wait()
 
-	//close(ch)
+	time.Sleep(1 * time.Second)
+	close(ch)
 
-	for i := range ch {
-		fmt.Println(i)
+	for {
+
+		msg, ok := <-ch
+
+		if !ok {
+			break
+		}
+		fmt.Printf("got %v \n", msg)
 
 	}
 
-	fmt.Println(time.Since(now))
+	fmt.Println(time.Since(now) - time.Second)
 }
 
 // fakeFetcher is Fetcher that returns canned results.
