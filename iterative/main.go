@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"reflect"
 	"slices"
 	"time"
 )
@@ -64,11 +65,13 @@ func main() {
 
 	urls = append(urls, firstUrl)
 
-	for j := 0; j < 1; j++ {
+	for j := 0; j < 3; j++ {
+		//for {
+		fmt.Println("-------------------------")
 
 		fmt.Printf("iteration: ( %v )\n", j)
 		fmt.Printf("urls: ( %v )\n", urls)
-		fmt.Printf("cached urls: ( %v )\n", urlsCache)
+		fmt.Printf("cached urls: ( %v )\n\n\n\n", urlsCache)
 
 		if len(urls) == 0 {
 			break
@@ -76,23 +79,43 @@ func main() {
 
 		for _, url := range urls {
 
-			fmt.Println("reached loop")
 			//cache check
 			if slices.Contains(urlsCache, url) {
 				continue
 			}
+			fmt.Printf("url selected in urls: ( %s)\n", url)
 
 			go func(msg string) {
-				fmt.Println("reached concurrent")
 
-				body, urls, err := fetcher.Fetch(urls[0])
-				fmt.Printf("fetched body: (%s), found URLs: (%v)\n", body, urls)
-				urlsCache = append(urlsCache, urls[0])
+				fmt.Printf("attempt fetch of %s\n", url)
+
+				body, routinesUrls, err := fetcher.Fetch(url)
+				fmt.Printf("routine fetched body: (%s), found URLs: (%v)\n\n\n\n", body, routinesUrls)
+				urlsCache = append(urlsCache, url)
+
+				urls = append(urls, routinesUrls...)
+
 				if err != nil {
 					return
 				}
-			}("going")
 
+			}("going")
+			time.Sleep(time.Second * 2)
+
+			// this sleep needs asserts that the command above can be printed
+			//the main program does not wait for the goroutines to finish
+
+			// fmt.Println("-------------------------")
+
+			// fmt.Printf("iteration: ( %v )\n", j)
+			// fmt.Printf("urls: ( %v )\n", urls)
+			// fmt.Printf("cached urls: ( %v )\n", urlsCache)
+
+		}
+
+		if reflect.DeepEqual(urls, urlsCache) {
+			fmt.Println("reached BREAK")
+			break
 		}
 
 	}
