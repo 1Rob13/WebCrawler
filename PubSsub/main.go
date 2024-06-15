@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sync"
 	"time"
 )
 
@@ -11,13 +12,69 @@ type Fetcher interface {
 	Fetch(url string) (body string, urls []string, err error)
 }
 
+type PubSub[T any] struct {
+	subscribers []chan T
+	mu          sync.RWMutex
+	closed      bool
+}
+
+func NewPubSub[T any]() *PubSub[T] {
+	return &PubSub[T]{
+		mu: sync.RWMutex{},
+	}
+}
+
+func (s *PubSub[T]) Subscribe() <-chan T {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.closed {
+		return nil
+	}
+
+	r := make(chan T)
+
+	s.subscribers = append(s.subscribers, r)
+
+	return r
+}
+
+func (s *PubSub[T]) Publish(value T) {
+
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	if s.closed {
+		return
+	}
+
+	for _, ch := range s.subscribers {
+		ch <- value
+	}
+}
+
+func (s *PubSub[T]) Close() {
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.closed {
+		return
+	}
+
+	for _, ch := range s.subscribers {
+		close(ch)
+	}
+	s.closed = true
+}
+
 // Crawl uses fetcher to recursively crawl
 // pages starting with url, to a maximum of depth.
-func Crawl(url string, depth int, fetcher Fetcher, c chan string) {
+func Crawl(url string, depth int, fetcher Fetcher) {
 	// TODO: Fetch URLs in parallel. results need to hit channel
 	// TODO: Don't fetch the same URL twice. -> with context
 	// This implementation doesn't do either:
-	//	now := time.Now()
+	//now := time.Now()
 	if depth <= 0 {
 		return
 	}
@@ -26,18 +83,21 @@ func Crawl(url string, depth int, fetcher Fetcher, c chan string) {
 
 	//collect channels up?
 
-	body, urls, err := fetcher.Fetch(url)
+	_, urls, err := fetcher.Fetch(url)
 	if err != nil {
-		c <- fmt.Sprintf(err.Error())
 		return
 	}
 
 	//fmt.Printf("found: %s %q\n", body, urls)
-	c <- fmt.Sprintf("found: %s %q\n", body, urls)
+
+	// for _, u := range urls {
+	// 	go Crawl(u, depth-1, fetcher, c)
+
+	// }
 
 	for _, u := range urls {
-		go Crawl(u, depth-1, fetcher, c)
 
+		Crawl(u, depth-1, fetcher)
 	}
 
 	//	fmt.Println(time.Since(now))
@@ -48,26 +108,39 @@ func main() {
 
 	now := time.Now()
 
-	ch := make(chan string, 15)
+	ps := NewPubSub[string]()
 
-	Crawl("https://golang.org/", 4, fetcher, ch)
-	//wg.Wait()
+	wg := sync.WaitGroup{}
 
-	time.Sleep(1 * time.Second)
-	close(ch)
+	s1 := ps.Subscribe()
 
-	for {
+	go func() {
 
-		msg, ok := <-ch
+		wg.Add(1)
 
-		if !ok {
-			break
+		for {
+
+			select {
+
+			case val, ok := <-s1:
+
+				if !ok {
+
+					fmt.Print("sub 1 , exiting")
+					wg.Done()
+					return
+				}
+				fmt.Println("sub 1, value,", val)
+			}
 		}
-		fmt.Printf("got %v \n", msg)
+	}()
 
-	}
+	// ps.Publish("one")
+	// ps.Publish("two")
+	// ps.Publish("three")
+	// ps.Publish("four")
 
-	fmt.Println(time.Since(now) - time.Second)
+	fmt.Println(time.Since(now))
 }
 
 // fakeFetcher is Fetcher that returns canned results.
