@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"slices"
+	"sync"
 	"time"
 )
 
@@ -28,6 +29,7 @@ func main() {
 	var (
 		urls      []string
 		urlsCache []string
+		wg        sync.WaitGroup
 		fetcher   = fakeFetcher{
 			"https://golang.org/": &fakeResult{
 				"The Go Programming Language",
@@ -85,6 +87,7 @@ func main() {
 			}
 			fmt.Printf("url selected in urls: ( %s)\n", url)
 
+			wg.Add(1)
 			go func(msg string) {
 
 				fmt.Printf("attempt fetch of %s\n", url)
@@ -100,7 +103,8 @@ func main() {
 				}
 
 			}("going")
-			time.Sleep(time.Second * 2)
+
+			wg.Done()
 
 			// this sleep needs asserts that the command above can be printed
 			//the main program does not wait for the goroutines to finish
@@ -112,6 +116,8 @@ func main() {
 			// fmt.Printf("cached urls: ( %v )\n", urlsCache)
 
 		}
+
+		wg.Wait()
 
 		if reflect.DeepEqual(urls, urlsCache) {
 			fmt.Println("reached BREAK")
