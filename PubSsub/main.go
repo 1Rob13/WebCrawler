@@ -12,64 +12,133 @@ type Fetcher interface {
 	Fetch(url string) (body string, urls []string, err error)
 }
 
+type PubSub[T any] struct {
+	subscribers []chan T
+	mu          sync.RWMutex
+	closed      bool
+}
+
+func NewPubSub[T any]() *PubSub[T] {
+	return &PubSub[T]{
+		mu: sync.RWMutex{},
+	}
+}
+
+func (s *PubSub[T]) Subscribe() <-chan T {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.closed {
+		return nil
+	}
+
+	r := make(chan T)
+
+	s.subscribers = append(s.subscribers, r)
+
+	return r
+}
+
+func (s *PubSub[T]) Publish(value T) {
+
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	if s.closed {
+		return
+	}
+
+	for _, ch := range s.subscribers {
+		ch <- value
+	}
+}
+
+func (s *PubSub[T]) Close() {
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.closed {
+		return
+	}
+
+	for _, ch := range s.subscribers {
+		close(ch)
+	}
+	s.closed = true
+}
+
 // Crawl uses fetcher to recursively crawl
 // pages starting with url, to a maximum of depth.
-func Crawl(url string, depth int, fetcher Fetcher, c chan string, wg *sync.WaitGroup) {
+func Crawl(url string, depth int, fetcher Fetcher) {
 	// TODO: Fetch URLs in parallel. results need to hit channel
 	// TODO: Don't fetch the same URL twice. -> with context
 	// This implementation doesn't do either:
-	//	now := time.Now()
-
+	//now := time.Now()
 	if depth <= 0 {
 		return
 	}
-	body, urls, err := fetcher.Fetch(url)
+
+	//i think he panics because he does not control the recoursive calls and they send after the chan recieve is down
+
+	//collect channels up?
+
+	_, urls, err := fetcher.Fetch(url)
 	if err != nil {
-		fmt.Println(err)
 		return
 	}
 
 	//fmt.Printf("found: %s %q\n", body, urls)
-	c <- fmt.Sprintf("found: %s %q\n", body, urls)
+
+	// for _, u := range urls {
+	// 	go Crawl(u, depth-1, fetcher, c)
+
+	// }
 
 	for _, u := range urls {
-		wg.Add(1)
-		go Crawl(u, depth-1, fetcher, c, wg)
-		defer wg.Done()
+
+		Crawl(u, depth-1, fetcher)
 	}
 
 	//	fmt.Println(time.Since(now))
 	return
 }
 
-func monitorWorker(cs chan string, wg *sync.WaitGroup) {
-	wg.Wait()
-	close(cs)
-}
-
-func printWorker(cs <-chan string, done chan<- bool) {
-	for a := 1; a <= len(cs); a++ {
-		fmt.Println(<-cs)
-	}
-	done <- true
-}
-
 func main() {
 
 	now := time.Now()
 
-	ch := make(chan string, 1)
+	ps := NewPubSub[string]()
+
 	wg := sync.WaitGroup{}
 
-	Crawl("https://golang.org/", 4, fetcher, ch, &wg)
-	wg.Wait()
-	defer close(ch)
+	s1 := ps.Subscribe()
 
-	for i := range ch {
+	go func() {
 
-		fmt.Println(i)
+		wg.Add(1)
 
-	}
+		for {
+
+			select {
+
+			case val, ok := <-s1:
+
+				if !ok {
+
+					fmt.Print("sub 1 , exiting")
+					wg.Done()
+					return
+				}
+				fmt.Println("sub 1, value,", val)
+			}
+		}
+	}()
+
+	// ps.Publish("one")
+	// ps.Publish("two")
+	// ps.Publish("three")
+	// ps.Publish("four")
 
 	fmt.Println(time.Since(now))
 }

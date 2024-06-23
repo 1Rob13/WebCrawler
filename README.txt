@@ -64,3 +64,19 @@ found: https://golang.org/ "The Go Programming Language"
 found: https://golang.org/pkg/ "Packages"
 not found: https://golang.org/cmd/
 time since start 204.4µs% 
+
+
+15.73µs
+13.2µs
+3.93µs
+3.61µs
+2.7µs
+4.27µs
+5.76µs
+33.03µs
+15.36µs
+13.99µs
+
+the sum of these should be the max execution time 
+
+goal 100 micro Seconds

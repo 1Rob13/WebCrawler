@@ -1,0 +1,55 @@
+routine fetched body: (The Go Programming Language), found URLs: ([https://golang.org/pkg/ https://golang.org/cmd/])
+
+
+
+48.76µs
+❯ go run main.go
+routine fetched body: (The Go Programming Language), found URLs: ([https://golang.org/pkg/ https://golang.org/cmd/])
+
+
+
+49.08µs
+❯ go run main.go
+routine fetched body: (The Go Programming Language), found URLs: ([https://golang.org/pkg/ https://golang.org/cmd/])
+
+
+
+50.86µs
+❯ go run main.go
+routine fetched body: (The Go Programming Language), found URLs: ([https://golang.org/pkg/ https://golang.org/cmd/])
+
+
+
+60.59µs
+❯ go run main.go
+routine fetched body: (The Go Programming Language), found URLs: ([https://golang.org/pkg/ https://golang.org/cmd/])
+
+
+
+51.55µs
+❯ go run main.go
+routine fetched body: (The Go Programming Language), found URLs: ([https://golang.org/pkg/ https://golang.org/cmd/])
+
+
+
+35.85µs
+❯ go run main.go
+routine fetched body: (The Go Programming Language), found URLs: ([https://golang.org/pkg/ https://golang.org/cmd/])
+
+
+
+36.55µs
+❯ go run main.go
+routine fetched body: (The Go Programming Language), found URLs: ([https://golang.org/pkg/ https://golang.org/cmd/])
+
+
+
+36.58µs
+❯ go run main.go
+routine fetched body: (The Go Programming Language), found URLs: ([https://golang.org/pkg/ https://golang.org/cmd/])
+
+
+
+49.39µs
+
+159.84µs is the max time this should take
