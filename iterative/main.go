@@ -64,7 +64,7 @@ func main() {
 
 	urls = append(urls, firstUrl)
 
-	for j := 0; j < 4; j++ {
+	for j := 0; j < 3; j++ {
 		//for {
 		fmt.Println("-------------------------")
 
