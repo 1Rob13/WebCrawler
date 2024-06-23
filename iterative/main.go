@@ -31,7 +31,9 @@ func FetchParallel(urls []string) []string {
 		resultUrls = append(resultUrls, result...)
 	}
 
-	return resultUrls
+	slices.Sort(resultUrls)
+
+	return (slices.Compact(resultUrls))
 
 }
 
@@ -89,23 +91,21 @@ func main() {
 	now := time.Now()
 
 	var (
-		firstUrl = "https://golang.org/"
-		urls     = []string{}
-		visited  = []string{}
+		firstUrl  = "https://golang.org/"
+		urls      = []string{}
+		visited   = []string{}
+		collected = []string{}
 	)
 
 	urls = append(urls, firstUrl)
 
 	for j := 0; j < 3; j++ {
 
-		//	fmt.Println()
-
 		newUrls := []string{}
 
 		for _, url := range urls {
 
 			if slices.Contains(visited, url) {
-
 				continue
 			}
 
@@ -115,13 +115,28 @@ func main() {
 		urls = newUrls
 
 		urlsNew := FetchParallel(urls)
+		// [https://golang.org/cmd/ https://golang.org/pkg/]
+		// [https://golang.org/ https://golang.org/cmd/ https://golang.org/pkg/fmt/ https://golang.org/pkg/os/]
+		// [https://golang.org/ https://golang.org/pkg/]
 		visited = append(visited, urls...)
-
 		urls = append(urls, urlsNew...)
+		collected = append(collected, urls...)
+		// for _, url := range urlsNew {
+
+		// 	if slices.Contains(visited, url) {
+
+		// 		continue
+		// 	}
+
+		// 	urls = append(urls, url)
+
+		// }
 
 	}
 
-	fmt.Printf("\nfetched URLS: %v\n", urls)
+	slices.Sort(collected)
+
+	fmt.Printf("\nfetched URLS: %v\n", slices.Compact(collected))
 	// fmt.Printf("\ncached URLS: %v\n", urlsCache)
 
 	// if len(urlsCache) != 5 {

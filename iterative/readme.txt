@@ -32,3 +32,10 @@ todo test this concept and ensure 2 functions running at the same time
 fmt.Println() is slow as fuck
 
 fmt.Printf is somehow slipery when used in parallel
+
+S: [https://golang.org/pkg/fmt/ https://golang.org/pkg/os/ https://golang.org/ https://golang.org/pkg/ https://golang.org/ https://golang.org/pkg/]
+
+fetched URLS: [https://golang.org/ https://golang.org/cmd/ https://golang.org/pkg/ https://golang.org/pkg/fmt/ https://golang.org/pkg/os/]
+51.93µs finally
+
+path that worked was that the function encapsulates the parallel part
