@@ -79,9 +79,11 @@ func main() {
 		//parallisable from here------------------------------------------------
 		//
 		//
-		// -- cant be done inside the loop because that would be done double
+		// -- cant be done inside the loop because that would be done double for each url
+		//  it will be reset during next iteration
 		// chURLS := make(chan []string)
 
+		//is this for loop taking more than normal? it should be at init fixed how many urls
 		for _, url := range urls {
 
 			urlsCache = append(urlsCache, url) // this should be doable after because the barrier of the semaphore happens later anyway
@@ -96,6 +98,7 @@ func main() {
 			}
 			fmt.Printf("routine fetched body: (%s), found URLs: (%v)\n\n\n\n", body, routinesUrls)
 
+			//if new urls was already visited do not add it to urls
 			for _, url := range routinesUrls {
 
 				if slices.Contains(urlsCache, url) {
@@ -104,12 +107,24 @@ func main() {
 				urls = append(urls, url)
 			}
 
+			//send filtered urls to channel
+			//chURLS <- urls
+
+			//done channels do not work because there are 2 routines that will both end the waiting
+			// done <- 0
+
 			//
 			//
 			//
 			//parallisable to here------------------------------------------------
 
 		}
+
+		// for value := range chURLS {
+
+		// 	fmt.Println(value) // Process the received values
+
+		// }
 
 		//cant pull this in for now, will end up new fetched, it kinda works semaphore like because it will wait for other processes to be done
 		//this also saves extra lookups this way
