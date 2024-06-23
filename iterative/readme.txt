@@ -12,3 +12,6 @@ it seems like all the global variables in the scope fuck up parallel
 i need one function to parallelizes that does not depend on any outside input
 
 todo make it work without global variables
+
+todo make it work without global variables, while not using parral 
+todo add parallel
