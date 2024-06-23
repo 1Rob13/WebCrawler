@@ -83,12 +83,13 @@ func main() {
 				continue
 			}
 
+			urlsCache = append(urlsCache, url) // this should be doable after because the barrier of the semaphore happens later anyway
+
 			//parallisable from here------------------------------------------------
 			//
 			//
 			//
 
-			urlsCache = append(urlsCache, url)
 			fmt.Printf("url selected in urls: ( %s)\n", url)
 
 			fmt.Printf("attempt fetch of %s\n", url)
