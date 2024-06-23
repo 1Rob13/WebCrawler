@@ -82,6 +82,12 @@ func main() {
 			if slices.Contains(urlsCache, url) {
 				continue
 			}
+
+			//parallisable from here------------------------------------------------
+			//
+			//
+			//
+
 			urlsCache = append(urlsCache, url)
 			fmt.Printf("url selected in urls: ( %s)\n", url)
 
@@ -101,9 +107,15 @@ func main() {
 				urls = append(urls, url)
 			}
 
+			//
+			//
+			//
+			//parallisable to here------------------------------------------------
+
 		}
 
-		//cant pull this in for now, will end up new fetched
+		//cant pull this in for now, will end up new fetched, it kinda works semaphore like because it will wait for other processes to be done
+		//this also saves extra lookups this way
 		newUrls := []string{}
 		//assert that urls is only new urls
 		for _, url := range urls {
