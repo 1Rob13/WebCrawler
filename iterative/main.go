@@ -2,14 +2,12 @@ package main
 
 import (
 	"fmt"
+	"slices"
 	"sync"
 	"time"
 )
 
 func FetchParallel(urls []string) []string {
-
-	fmt.Println("got called")
-	fmt.Println(urls)
 
 	ch := make(chan []string)
 
@@ -30,7 +28,6 @@ func FetchParallel(urls []string) []string {
 
 	for result := range ch {
 
-		fmt.Println(result)
 		resultUrls = append(resultUrls, result...)
 	}
 
@@ -94,7 +91,7 @@ func main() {
 	var (
 		firstUrl = "https://golang.org/"
 		urls     = []string{}
-		//visited  = []string{}
+		visited  = []string{}
 	)
 
 	urls = append(urls, firstUrl)
@@ -103,29 +100,28 @@ func main() {
 
 		//	fmt.Println()
 
-		// newUrls := []string{}
+		newUrls := []string{}
 
-		// for _, url := range urls {
+		for _, url := range urls {
 
-		// 	if slices.Contains(visited, url) {
+			if slices.Contains(visited, url) {
 
-		// 		continue
-		// 	}
+				continue
+			}
 
-		// 	newUrls = append(newUrls, url)
-		// }
+			newUrls = append(newUrls, url)
+		}
 
-		// urls = newUrls
+		urls = newUrls
 
 		urlsNew := FetchParallel(urls)
+		visited = append(visited, urls...)
 
 		urls = append(urls, urlsNew...)
 
-		//visited = append(visited, urls...)
-
 	}
 
-	// fmt.Printf("\nfetched URLS: %v\n", urls)
+	fmt.Printf("\nfetched URLS: %v\n", urls)
 	// fmt.Printf("\ncached URLS: %v\n", urlsCache)
 
 	// if len(urlsCache) != 5 {
