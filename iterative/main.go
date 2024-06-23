@@ -84,11 +84,6 @@ func main() {
 
 		for _, url := range urls {
 
-			//cache check
-			if slices.Contains(urlsCache, url) {
-				continue
-			}
-
 			urlsCache = append(urlsCache, url) // this should be doable after because the barrier of the semaphore happens later anyway
 
 			fmt.Printf("url selected in urls: ( %s)\n", url)
