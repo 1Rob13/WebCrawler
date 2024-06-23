@@ -103,6 +103,7 @@ func main() {
 
 		}
 
+		//cant pull this in for now, will end up new fetched
 		newUrls := []string{}
 		//assert that urls is only new urls
 		for _, url := range urls {
@@ -121,6 +122,16 @@ func main() {
 
 	fmt.Printf("\nfetched URLS: %v\n", urls)
 	fmt.Printf("\ncached URLS: %v\n", urlsCache)
+
+	if len(urlsCache) != 5 {
+		fmt.Println("ERROR--------------urlsCache not 5----------------ERROR------------------------------ERROR------------------------------ERROR------------------------------")
+
+	}
+
+	if len(urls) != 0 {
+		fmt.Println("ERROR--------------urls not 0----------------ERROR------------------------------ERROR------------------------------ERROR------------------------------")
+
+	}
 
 	fmt.Println(time.Since(now))
 
