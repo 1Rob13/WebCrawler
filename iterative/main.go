@@ -76,6 +76,12 @@ func main() {
 			break
 		}
 
+		//parallisable from here------------------------------------------------
+		//
+		//
+		// -- cant be done inside the loop because that would be done double
+		// chURLS := make(chan []string)
+
 		for _, url := range urls {
 
 			//cache check
@@ -84,11 +90,6 @@ func main() {
 			}
 
 			urlsCache = append(urlsCache, url) // this should be doable after because the barrier of the semaphore happens later anyway
-
-			//parallisable from here------------------------------------------------
-			//
-			//
-			//
 
 			fmt.Printf("url selected in urls: ( %s)\n", url)
 
