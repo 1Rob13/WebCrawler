@@ -91,15 +91,16 @@ func main() {
 	now := time.Now()
 
 	var (
-		firstUrl  = "https://golang.org/"
-		urls      = []string{}
-		visited   = []string{}
-		collected = []string{}
+		firstUrl      = "https://golang.org/"
+		urls          = []string{}
+		visited       = []string{}
+		collected     = []string{}
+		depth     int = 2
 	)
 
 	urls = append(urls, firstUrl)
 
-	for j := 0; j < 3; j++ {
+	for j := 0; j < depth; j++ {
 
 		newUrls := []string{}
 
