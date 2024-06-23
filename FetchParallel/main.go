@@ -49,18 +49,7 @@ func fetch(url string, ch chan []string, wg *sync.WaitGroup) {
 
 	if res, ok := fetcher[url]; ok {
 		ch <- res.urls
-
 	}
-
-	// if url == "https://golang.org/" {
-
-	// 	ch <- []string{"20"}
-	// }
-
-	// if url == "berlin.com" {
-
-	// 	ch <- []string{"30"}
-	// }
 
 	defer wg.Done()
 
@@ -71,6 +60,14 @@ func main() {
 	start := time.Now()
 
 	urls := []string{"https://golang.org/", "https://golang.org/pkg/"}
+
+	FetchParallel(urls)
+
+	fmt.Println(time.Since(start))
+
+}
+
+func FetchParallel(urls []string) {
 
 	ch := make(chan []string)
 
@@ -91,7 +88,5 @@ func main() {
 
 		fmt.Println(result)
 	}
-
-	fmt.Println(time.Since(start))
 
 }

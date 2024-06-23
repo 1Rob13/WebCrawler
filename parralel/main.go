@@ -39,7 +39,6 @@ func main() {
 	}
 
 	go func() {
-
 		wg.Wait()
 		close(ch)
 	}()
