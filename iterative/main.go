@@ -2,9 +2,7 @@ package main
 
 import (
 	"fmt"
-	"reflect"
 	"slices"
-	"sync"
 	"time"
 )
 
@@ -27,22 +25,19 @@ func main() {
 	now := time.Now()
 
 	var (
-		urls      []string
-		urlsCache []string
-		wg        sync.WaitGroup
-		fetcher   = fakeFetcher{
+		fetcher = fakeFetcher{
 			"https://golang.org/": &fakeResult{
 				"The Go Programming Language",
 				[]string{
 					"https://golang.org/pkg/",
-					"https://golang.org/cmd/",
+					"https://golang.org/cmd/", // a miss
 				},
 			},
 			"https://golang.org/pkg/": &fakeResult{
 				"Packages",
 				[]string{
-					"https://golang.org/",
-					"https://golang.org/cmd/",
+					"https://golang.org/",     // already traversed
+					"https://golang.org/cmd/", // a miss
 					"https://golang.org/pkg/fmt/",
 					"https://golang.org/pkg/os/",
 				},
@@ -61,13 +56,15 @@ func main() {
 					"https://golang.org/pkg/",
 				},
 			}}
-	)
 
-	firstUrl := "https://golang.org/"
+		firstUrl  = "https://golang.org/"
+		urls      = []string{}
+		urlsCache = []string{}
+	)
 
 	urls = append(urls, firstUrl)
 
-	for j := 0; j < 3; j++ {
+	for j := 0; j < 4; j++ {
 		//for {
 		fmt.Println("-------------------------")
 
@@ -85,46 +82,45 @@ func main() {
 			if slices.Contains(urlsCache, url) {
 				continue
 			}
+			urlsCache = append(urlsCache, url)
 			fmt.Printf("url selected in urls: ( %s)\n", url)
 
-			wg.Add(1)
-			go func(msg string) {
+			fmt.Printf("attempt fetch of %s\n", url)
 
-				fmt.Printf("attempt fetch of %s\n", url)
+			body, routinesUrls, err := fetcher.Fetch(url)
+			if err != nil {
+				fmt.Printf("routine fetched body: %v:", err)
+			}
+			fmt.Printf("routine fetched body: (%s), found URLs: (%v)\n\n\n\n", body, routinesUrls)
 
-				body, routinesUrls, err := fetcher.Fetch(url)
-				fmt.Printf("routine fetched body: (%s), found URLs: (%v)\n\n\n\n", body, routinesUrls)
-				urlsCache = append(urlsCache, url)
+			for _, url := range routinesUrls {
 
-				urls = append(urls, routinesUrls...)
-
-				if err != nil {
-					return
+				if slices.Contains(urlsCache, url) {
+					continue
 				}
-
-			}("going")
-
-			wg.Done()
-
-			// this sleep needs asserts that the command above can be printed
-			//the main program does not wait for the goroutines to finish
-
-			// fmt.Println("-------------------------")
-
-			// fmt.Printf("iteration: ( %v )\n", j)
-			// fmt.Printf("urls: ( %v )\n", urls)
-			// fmt.Printf("cached urls: ( %v )\n", urlsCache)
+				urls = append(urls, url)
+			}
 
 		}
 
-		wg.Wait()
+		newUrls := []string{}
+		//assert that urls is only new urls
+		for _, url := range urls {
 
-		if reflect.DeepEqual(urls, urlsCache) {
-			fmt.Println("reached BREAK")
-			break
+			if slices.Contains(urlsCache, url) {
+				continue
+			}
+
+			newUrls = append(newUrls, url)
+
 		}
+
+		urls = newUrls
 
 	}
+
+	fmt.Printf("\nfetched URLS: %v\n", urls)
+	fmt.Printf("\ncached URLS: %v\n", urlsCache)
 
 	fmt.Println(time.Since(now))
 
